@@ -444,3 +444,7 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`[Proxy Server] running on port ${PORT}`);
 });
+
+// Export for Vercel serverless deployment
+export default app;
+
