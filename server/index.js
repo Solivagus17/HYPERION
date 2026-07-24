@@ -9,7 +9,7 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 7860;
 
 app.use(cors());
 app.use(express.json());
@@ -421,6 +421,20 @@ app.post('/api/log-error', express.json(), (req, res) => {
   console.log('\x1b[31m[BROWSER CRITICAL ERROR]\x1b[0m', JSON.stringify(req.body, null, 2));
   res.sendStatus(200);
 });
+
+// Serve static frontend files from client/dist if present (for single-container deployments like Hugging Face Spaces)
+const clientDistPath = path.join(process.cwd(), 'client', 'dist');
+const altClientDistPath = path.join(process.cwd(), '..', 'client', 'dist');
+const distPath = fs.existsSync(clientDistPath) ? clientDistPath : (fs.existsSync(altClientDistPath) ? altClientDistPath : null);
+
+if (distPath) {
+  console.log(`[Express] Serving static frontend build from ${distPath}`);
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
