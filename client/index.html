@@ -6,8 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HYPERION - Real-Time Space Debris & Satellite Tracker</title>
     <script>
+      var API_LOG_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001/api/log-error'
+        : '/api/log-error';
       function sendErrorToServer(type, data) {
-        fetch('http://localhost:3001/api/log-error', {
+        fetch(API_LOG_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type: type, data: data, url: window.location.href })
