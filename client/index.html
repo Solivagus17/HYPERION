@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HYPERION - Real-Time Space Debris & Satellite Tracker</title>
+    <script>
+      function sendErrorToServer(type, data) {
+        fetch('http://localhost:3001/api/log-error', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: type, data: data, url: window.location.href })
+        }).catch(function(e) {});
+      }
+
+      // Catch exceptions (bubbles = true) and resource load errors (useCapture = true)
+      window.addEventListener('error', function(event) {
+        // If the error comes from a tag (e.g. SCRIPT or LINK), it is a resource load error!
+        if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
+          var src = event.target.src || event.target.href;
+          sendErrorToServer('resource_load_error', {
+            src: src,
+            tagName: event.target.tagName
+          });
+          
+          var errorDiv = document.createElement('div');
+          errorDiv.style.position = 'fixed';
+          errorDiv.style.top = '10px';
+          errorDiv.style.left = '10px';
+          errorDiv.style.right = '10px';
+          errorDiv.style.padding = '20px';
+          errorDiv.style.background = 'rgba(150, 0, 0, 0.95)';
+          errorDiv.style.color = '#fff';
+          errorDiv.style.fontFamily = 'monospace';
+          errorDiv.style.fontSize = '14px';
+          errorDiv.style.zIndex = '999999';
+          errorDiv.style.border = '2px solid red';
+          errorDiv.style.whiteSpace = 'pre-wrap';
+          errorDiv.style.maxHeight = '90vh';
+          errorDiv.style.overflow = 'auto';
+          errorDiv.innerText = 'Failed to load critical resource:\n' + src + '\n(Tag: ' + event.target.tagName + ')';
+          (document.body || document.documentElement).appendChild(errorDiv);
+          return;
+        }
+
+        var errInfo = {
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          stack: event.error ? event.error.stack : null
+        };
+        sendErrorToServer('uncaught_error', errInfo);
+
+        var errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '10px';
+        errorDiv.style.left = '10px';
+        errorDiv.style.right = '10px';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.background = 'rgba(150, 0, 0, 0.95)';
+        errorDiv.style.color = '#fff';
+        errorDiv.style.fontFamily = 'monospace';
+        errorDiv.style.fontSize = '14px';
+        errorDiv.style.zIndex = '999999';
+        errorDiv.style.border = '2px solid red';
+        errorDiv.style.whiteSpace = 'pre-wrap';
+        errorDiv.style.maxHeight = '90vh';
+        errorDiv.style.overflow = 'auto';
+        errorDiv.innerText = 'Uncaught Runtime Error:\n' + (event.error ? event.error.stack : event.message);
+        (document.body || document.documentElement).appendChild(errorDiv);
+      }, true); // useCapture = true is critical to capture resource errors!
+
+      window.addEventListener('unhandledrejection', function(event) {
+        var errInfo = {
+          reason: event.reason ? (event.reason.stack || String(event.reason)) : null
+        };
+        sendErrorToServer('unhandled_rejection', errInfo);
+
+        var errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '10px';
+        errorDiv.style.left = '10px';
+        errorDiv.style.right = '10px';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.background = 'rgba(150, 0, 0, 0.95)';
+        errorDiv.style.color = '#fff';
+        errorDiv.style.fontFamily = 'monospace';
+        errorDiv.style.fontSize = '14px';
+        errorDiv.style.zIndex = '999999';
+        errorDiv.style.border = '2px solid red';
+        errorDiv.style.whiteSpace = 'pre-wrap';
+        errorDiv.style.maxHeight = '90vh';
+        errorDiv.style.overflow = 'auto';
+        errorDiv.innerText = 'Unhandled Promise Rejection:\n' + (event.reason ? (event.reason.stack || event.reason) : 'Unknown promise rejection');
+        (document.body || document.documentElement).appendChild(errorDiv);
+      });
+
+      // Catch console.error
+      var oldError = console.error;
+      console.error = function() {
+        var args = Array.prototype.slice.call(arguments);
+        var message = args.map(function(a) {
+          return typeof a === 'object' ? JSON.stringify(a) : String(a);
+        }).join(' ');
+        sendErrorToServer('console_error', { message: message });
+        oldError.apply(console, arguments);
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
