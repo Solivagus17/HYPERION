@@ -22,6 +22,11 @@ logs/
 *.log
 npm-debug.log*
 
+# Local Notes & Memory (Ignored)
+memory.md
+MEMORY.md
+*.memory.md
+
 # IDE & OS Files
 .vscode/
 .idea/
